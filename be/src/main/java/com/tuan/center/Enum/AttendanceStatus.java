@@ -1,4 +1,5 @@
 package com.tuan.center.Enum;
 
-public class AttendanceStatus {
+public enum AttendanceStatus {
+    PRESENT, ABSENT, LATE
 }

@@ -1,4 +1,5 @@
 package com.tuan.center.Enum;
 
-public class ClassStatus {
+public enum ClassStatus {
+    UPCOMING, IN_PROGRESS, FINISHED, CANCELLED
 }

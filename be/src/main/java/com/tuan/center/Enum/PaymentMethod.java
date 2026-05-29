@@ -1,4 +1,5 @@
 package com.tuan.center.Enum;
 
-public class PaymentMethod {
+public enum PaymentMethod {
+    CASH, BANK_TRANSFER, MOMO, VNPAY, CARD
 }

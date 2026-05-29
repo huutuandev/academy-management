@@ -1,4 +1,5 @@
 package com.tuan.center.Enum;
 
-public class ClassStudentStatus {
+public enum ClassStudentStatus {
+    ACTIVE, DROPPED, COMPLETED
 }
