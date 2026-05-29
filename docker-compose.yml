@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # ==================== BACKEND (Spring Boot) ====================
+  backend:
+    build:
+      context: ./center-management
+      dockerfile: Dockerfile
+    container_name: center-backend
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://YOUR_MYSQL_HOST:3306/center_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+      SPRING_DATASOURCE_USERNAME: center_user
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8080:8080"
+    networks:
+      - center-network
+
+  # ==================== FRONTEND (React) ====================
+  frontend:
+    build:
+      context: ./center-frontend
+      dockerfile: Dockerfile
+    container_name: center-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - center-network
+
+# Network
+networks:
+  center-network:
+    driver: bridge
