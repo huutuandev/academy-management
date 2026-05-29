@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
 
     show-sql: true
 
@@ -26,3 +26,10 @@ logging:
     com.tuan.center: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
+app:
+  jwt:
+    secret: hkzD64R/8cok1dUKaTYnpTaPTZQYdVzoga9ZpfChh3o=
+    access-expiration-ms: 900000        # 15 phút
+    refresh-expiration-ms: 604800000    # 7 ngày
