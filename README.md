@@ -142,7 +142,7 @@ npm start
 
 ## 👨‍💻 Tác giả
 
-* Your Name
+* Tuấn dev
 
 ---
 
