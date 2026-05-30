@@ -125,7 +125,7 @@ public class JwtService {
      */
     public boolean validateToken(String token, String username) {
         try {
-            final String tokenUsername = extractUsername(username);
+            final String tokenUsername = extractUsername(token);
             return (tokenUsername.equals(username) && !isTokenExpired(token));
         } catch (Exception e) {
             return false;
