@@ -11,13 +11,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-
     show-sql: true
-
     properties:
       hibernate:
         format_sql: true
-
+  data:
+    redis:
+      host: localhost
+      port: 6379
 server:
   port: 8080
 
@@ -33,3 +34,9 @@ app:
     secret: hkzD64R/8cok1dUKaTYnpTaPTZQYdVzoga9ZpfChh3o=
     access-expiration-ms: 900000        # 15 phút
     refresh-expiration-ms: 604800000    # 7 ngày
+
+  cookie:
+    secure: false
+    same-site: Lax
+    path: /api/auth
+    max-age: 604800
