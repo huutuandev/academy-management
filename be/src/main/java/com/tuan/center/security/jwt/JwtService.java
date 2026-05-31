@@ -33,22 +33,17 @@ public class JwtService {
      * Tạo access token (15 phút)
      */
     public String generateAccessToken(User user) {
-        return buildToken(user, accessExpirationMs);
+        return buildAccessToken(user, accessExpirationMs);
     }
 
-    /**
-     * Tạo refresh token (7 ngày) - Không dùng nữa, dùng UUID thay thế
-     * @deprecated Sử dụng UUID.randomUUID() cho refresh token
-     */
-    @Deprecated
-    public String generateRefreshToken(User user) {
-        return buildToken(user, refreshExpirationMs);
+    public String generateRefreshToken(User user, String tokenId) {
+        return buildRefreshToken(user, refreshExpirationMs, tokenId );
     }
 
     /**
      * Build JWT token
      */
-    private String buildToken(User user, long expirationMs) {
+    private String buildAccessToken(User user, long expirationMs) {
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
@@ -61,9 +56,21 @@ public class JwtService {
                 .signWith(getSignKey())
                 .compact();
     }
+    private String buildRefreshToken(User user, long expirationMs, String tokenId) {
+        long now = System.currentTimeMillis();
+
+        return Jwts.builder()
+                .subject(user.getId().toString())
+                .claim("jti", tokenId)
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + expirationMs))
+                .signWith(getSignKey())
+                .compact();
+    }
 
 
-    /* ================= PARSE & EXTRACT ================= */
+
+        /* ================= PARSE & EXTRACT ================= */
 
     /**
      * Lấy email từ token
@@ -90,7 +97,7 @@ public class JwtService {
     /**
      * Parse token và lấy tất cả claims
      */
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(getSignKey())
