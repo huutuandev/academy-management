@@ -5,11 +5,13 @@ import com.tuan.center.entity.User;
 import com.tuan.center.dto.request.LoginRequest;
 import com.tuan.center.dto.request.RegisterRequest;
 import com.tuan.center.dto.response.AuthResponse;
+import com.tuan.center.exception.UnauthorizedException;
 import com.tuan.center.repository.RoleRepository;
 import com.tuan.center.repository.UserRepository;
 import com.tuan.center.security.jwt.JwtService;
 import com.tuan.center.security.user.CustomUserDetails;
-import com.tuan.center.service.IAuthService;
+import com.tuan.center.service.RefreshTokenService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,13 +24,14 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements IAuthService {
+public class AuthServiceImpl implements com.tuan.center.service.AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -46,11 +49,13 @@ public class AuthService implements IAuthService {
 
         // 3. Tạo access token
         String accessToken = jwtService.generateAccessToken(user);
-
+        String tokenId = UUID.randomUUID().toString();
+        String refreshToken = jwtService.generateRefreshToken(user, tokenId);
+        refreshTokenService.saveRefreshToken(user.getId(), tokenId, refreshToken);
         // 4. Tạo AuthResponse
         return AuthResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(UUID.randomUUID().toString())
+                .refreshToken(refreshToken)
                 .userId(user.getId())
                 .fullName(user.getFullName())
                 .build();
@@ -107,5 +112,69 @@ public class AuthService implements IAuthService {
                 .userId(user.getId())
                 .fullName(user.getFullName())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshAccessToken(String refreshToken) {
+
+        Claims claims =
+                jwtService.extractAllClaims(refreshToken);
+
+        Long userId =
+                Long.parseLong(claims.getSubject());
+
+        String tokenId =
+                claims.get("jti", String.class);
+
+        if (userId == null) {
+            throw new RuntimeException("Refresh token không hợp lệ hoặc đã hết hạn");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Tài khoản đã bị vô hiệu hóa");
+        }
+        String storedToken =
+                refreshTokenService.getRefreshToken(
+                        userId,
+                        tokenId
+                );
+
+        if (storedToken == null) {
+            throw new UnauthorizedException("Hết hạn token");
+        }
+
+        if (!storedToken.equals(refreshToken)) {
+            throw new UnauthorizedException("Hết hạn token");
+        }
+
+        // Tạo access token mới
+        String newAccessToken = jwtService.generateAccessToken(user);
+
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .build();
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        Claims claims =
+                jwtService.extractAllClaims(refreshToken);
+
+        Long userId =
+                Long.parseLong(claims.getSubject());
+
+        String tokenId =
+                claims.get("jti", String.class);
+
+        refreshTokenService.deleteRefreshToken(
+                userId,
+                tokenId
+        );
     }
 }
